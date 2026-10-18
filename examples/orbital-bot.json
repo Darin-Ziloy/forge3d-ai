@@ -1,0 +1,483 @@
+{
+  "name": "Orbital / inspection drone",
+  "fps": 24,
+  "frame_end": 121,
+  "camera": {
+    "location": [
+      6,
+      -10,
+      6
+    ],
+    "target": [
+      0,
+      0,
+      1.9
+    ],
+    "lens": 52
+  },
+  "world_color": [
+    0.12,
+    0.16,
+    0.14
+  ],
+  "lights": [
+    {
+      "id": "key",
+      "location": [
+        3,
+        -4,
+        7
+      ],
+      "energy": 1300,
+      "size": 5
+    },
+    {
+      "id": "rim",
+      "location": [
+        -4,
+        3,
+        6
+      ],
+      "energy": 1800,
+      "size": 4,
+      "color": [
+        0.65,
+        0.9,
+        1
+      ]
+    },
+    {
+      "id": "fill",
+      "location": [
+        -4,
+        -3,
+        2
+      ],
+      "energy": 650,
+      "size": 3
+    }
+  ],
+  "materials": [
+    {
+      "id": "ceramic",
+      "color": [
+        0.63,
+        0.72,
+        0.65,
+        1
+      ],
+      "metallic": 0.28,
+      "roughness": 0.28
+    },
+    {
+      "id": "obsidian",
+      "color": [
+        0.018,
+        0.03,
+        0.026,
+        1
+      ],
+      "metallic": 0.45,
+      "roughness": 0.25
+    },
+    {
+      "id": "alloy",
+      "color": [
+        0.27,
+        0.4,
+        0.32,
+        1
+      ],
+      "metallic": 0.8,
+      "roughness": 0.24
+    },
+    {
+      "id": "mint",
+      "color": [
+        0.43,
+        1,
+        0.5,
+        1
+      ],
+      "emission": 2.2,
+      "roughness": 0.3
+    },
+    {
+      "id": "orange",
+      "color": [
+        1,
+        0.21,
+        0.045,
+        1
+      ],
+      "emission": 0.6
+    },
+    {
+      "id": "ground_mat",
+      "color": [
+        0.075,
+        0.11,
+        0.085,
+        1
+      ],
+      "roughness": 0.85
+    }
+  ],
+  "objects": [
+    {
+      "id": "drone",
+      "type": "empty",
+      "location": [
+        0,
+        0,
+        2.5
+      ],
+      "scale": [
+        1,
+        1,
+        1
+      ],
+      "material": null,
+      "keyframes": [
+        {
+          "frame": 1,
+          "rotation": [
+            0,
+            0,
+            -20
+          ],
+          "location": [
+            0,
+            0,
+            2.5
+          ]
+        },
+        {
+          "frame": 61,
+          "rotation": [
+            0,
+            0,
+            160
+          ],
+          "location": [
+            0,
+            0,
+            2.75
+          ]
+        },
+        {
+          "frame": 121,
+          "rotation": [
+            0,
+            0,
+            340
+          ],
+          "location": [
+            0,
+            0,
+            2.5
+          ]
+        }
+      ]
+    },
+    {
+      "id": "shell",
+      "type": "sphere",
+      "location": [
+        0,
+        0,
+        0
+      ],
+      "scale": [
+        1.1,
+        0.75,
+        0.7
+      ],
+      "material": "ceramic",
+      "parent": "drone"
+    },
+    {
+      "id": "visor",
+      "type": "sphere",
+      "location": [
+        0,
+        -0.58,
+        0.05
+      ],
+      "scale": [
+        0.82,
+        0.31,
+        0.43
+      ],
+      "material": "obsidian",
+      "parent": "drone"
+    },
+    {
+      "id": "lens_left",
+      "type": "sphere",
+      "location": [
+        -0.34,
+        -0.86,
+        0.1
+      ],
+      "scale": [
+        0.14,
+        0.055,
+        0.14
+      ],
+      "material": "mint",
+      "parent": "drone"
+    },
+    {
+      "id": "wing_left",
+      "type": "cube",
+      "location": [
+        -1.36,
+        0,
+        -0.06
+      ],
+      "scale": [
+        0.36,
+        0.48,
+        0.07
+      ],
+      "material": "ceramic",
+      "parent": "drone",
+      "modifiers": [
+        {
+          "type": "bevel",
+          "amount": 0.2
+        }
+      ]
+    },
+    {
+      "id": "thruster_left",
+      "type": "cylinder",
+      "location": [
+        -1.36,
+        0,
+        -0.2
+      ],
+      "scale": [
+        0.24,
+        0.24,
+        0.13
+      ],
+      "material": "obsidian",
+      "parent": "drone"
+    },
+    {
+      "id": "thruster_glow_left",
+      "type": "torus",
+      "location": [
+        -1.36,
+        0,
+        -0.34
+      ],
+      "scale": [
+        0.18,
+        0.18,
+        0.18
+      ],
+      "material": "mint",
+      "parent": "drone"
+    },
+    {
+      "id": "lens_right",
+      "type": "sphere",
+      "location": [
+        0.34,
+        -0.86,
+        0.1
+      ],
+      "scale": [
+        0.14,
+        0.055,
+        0.14
+      ],
+      "material": "mint",
+      "parent": "drone"
+    },
+    {
+      "id": "wing_right",
+      "type": "cube",
+      "location": [
+        1.36,
+        0,
+        -0.06
+      ],
+      "scale": [
+        0.36,
+        0.48,
+        0.07
+      ],
+      "material": "ceramic",
+      "parent": "drone",
+      "modifiers": [
+        {
+          "type": "bevel",
+          "amount": 0.2
+        }
+      ]
+    },
+    {
+      "id": "thruster_right",
+      "type": "cylinder",
+      "location": [
+        1.36,
+        0,
+        -0.2
+      ],
+      "scale": [
+        0.24,
+        0.24,
+        0.13
+      ],
+      "material": "obsidian",
+      "parent": "drone"
+    },
+    {
+      "id": "thruster_glow_right",
+      "type": "torus",
+      "location": [
+        1.36,
+        0,
+        -0.34
+      ],
+      "scale": [
+        0.18,
+        0.18,
+        0.18
+      ],
+      "material": "mint",
+      "parent": "drone"
+    },
+    {
+      "id": "antenna",
+      "type": "cylinder",
+      "location": [
+        0,
+        0.05,
+        0.85
+      ],
+      "scale": [
+        0.035,
+        0.035,
+        0.23
+      ],
+      "material": "alloy",
+      "parent": "drone"
+    },
+    {
+      "id": "beacon",
+      "type": "sphere",
+      "location": [
+        0,
+        0.05,
+        1.1
+      ],
+      "scale": [
+        0.1,
+        0.1,
+        0.1
+      ],
+      "material": "orange",
+      "parent": "drone"
+    },
+    {
+      "id": "orbit_ring",
+      "type": "torus",
+      "location": [
+        0,
+        0,
+        -0.05
+      ],
+      "scale": [
+        1.72,
+        1.25,
+        0.25
+      ],
+      "material": "alloy",
+      "parent": "drone",
+      "rotation": [
+        12,
+        8,
+        0
+      ]
+    },
+    {
+      "id": "badge",
+      "type": "cube",
+      "location": [
+        0,
+        -0.66,
+        -0.35
+      ],
+      "scale": [
+        0.15,
+        0.07,
+        0.035
+      ],
+      "material": "orange",
+      "parent": "drone",
+      "modifiers": [
+        {
+          "type": "bevel",
+          "amount": 0.2
+        }
+      ]
+    },
+    {
+      "id": "pedestal",
+      "type": "cylinder",
+      "location": [
+        0,
+        0,
+        0.14
+      ],
+      "scale": [
+        1.6,
+        1.6,
+        0.14
+      ],
+      "material": "obsidian",
+      "modifiers": [
+        {
+          "type": "bevel",
+          "amount": 0.12
+        }
+      ]
+    },
+    {
+      "id": "pedestal_trim",
+      "type": "torus",
+      "location": [
+        0,
+        0,
+        0.27
+      ],
+      "scale": [
+        1.32,
+        1.32,
+        0.16
+      ],
+      "material": "mint"
+    },
+    {
+      "id": "ground",
+      "type": "plane",
+      "location": [
+        0,
+        0,
+        -0.01
+      ],
+      "scale": [
+        100,
+        100,
+        100
+      ],
+      "material": "ground_mat",
+      "preview_hidden": true
+    }
+  ]
+}

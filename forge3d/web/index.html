@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Forge3D · AI workspace</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="/style.css">
+  <script type="importmap">{"imports":{"three":"/vendor/build/three.module.js","three/addons/":"/vendor/examples/jsm/"}}</script>
+</head>
+<body>
+  <header>
+    <a class="brand" href="/" aria-label="Forge3D"><svg width="30" height="34" viewBox="0 0 30 34" fill="none"><path d="M15 2 28 9v16l-13 7L2 25V9Z" stroke="currentColor" stroke-width="2"/><path d="m2 9 13 8 13-8M15 17v15M8 13v8l7 4 7-4v-8" stroke="currentColor" stroke-width="2"/></svg><strong>FORGE<span>3D</span></strong></a>
+    <div class="top-label">AI WORKSPACE <span>/</span> LOCAL STUDIO</div>
+    <span id="connection" class="connection">Connecting…</span>
+    <button id="fullscreen" class="icon-btn" title="Fullscreen">⛶</button>
+  </header>
+  <main>
+    <aside class="sidebar">
+      <div class="eyebrow">WORKSPACE</div>
+      <label class="field-label" for="projects">Saved project</label>
+      <select id="projects"><option>Loading…</option></select>
+      <label class="field-label" for="revisions">Scene revision</label>
+      <select id="revisions"><option value="live">Current · live</option></select>
+      <div class="section-title"><span>OBJECTS</span><span id="object-count">0</span></div>
+      <div id="outliner" class="outliner"><div class="muted empty-list">Objects will appear after a build</div></div>
+      <div class="inspector"><div class="eyebrow">SELECTED OBJECT</div><strong id="selection">Nothing selected</strong><span id="selection-detail" class="muted">Click a model in the viewport</span></div>
+      <div class="exports"><div class="eyebrow">OUTPUT</div><a id="download-glb" class="export-link disabled" download>↓ Model <small>.GLB</small></a><a id="download-blend" class="export-link disabled" download>↓ Blender project <small>.BLEND</small></a></div>
+      <div class="local-note"><span class="dot"></span> Files stored on this computer</div>
+    </aside>
+    <section class="studio">
+      <div class="viewport" id="viewport">
+        <div class="viewport-title"><div class="eyebrow">PERSPECTIVE VIEW</div><h1 id="scene-title">Your space for 3D</h1><p id="scene-subtitle">AI creates. You watch.</p></div>
+        <div class="view-tools"><button id="fit" title="Frame the model (F)">Frame <kbd>F</kbd></button><button id="wireframe" aria-pressed="false">Wireframe</button><button id="rotate" aria-pressed="false">Orbit 360°</button></div>
+        <div id="empty" class="empty-state"><span class="empty-symbol">◇</span><h2>Ready for your idea</h2><p>Connect an AI through MCP or run the demo.<br>Your model will appear here automatically.</p><code>Start-Demo.cmd</code></div>
+        <div id="loading" class="loading" hidden>Loading model…</div>
+        <div class="viewport-footer"><span><i class="dot"></i> <span id="view-mode">Waiting for a scene</span></span><span>Left drag · orbit &nbsp; Right drag · pan &nbsp; Scroll · zoom</span><span class="axis">X <b>Y</b> Z</span></div>
+      </div>
+      <div class="timeline"><button id="play" title="Play / pause" disabled>▶</button><button id="rewind" title="Rewind" disabled>↤</button><span id="timecode">00:00.00</span><input id="scrubber" aria-label="Animation frame" type="range" min="0" max="1" step="0.001" value="0" disabled><span id="frame-label">0 / 0</span><span id="fps">24 FPS</span></div>
+    </section>
+    <aside class="activity">
+      <div class="section-title"><span>PROGRESS</span><span class="live-badge">LIVE</span></div>
+      <div class="status-card"><div id="status-icon">◎</div><h2 id="job-status">Waiting for a job</h2><p id="job-stage">AI can work in the background</p><div class="progress-track"><div id="progress"></div></div><div class="progress-text"><span id="job-kind">ENGINE</span><span id="percent">—</span></div></div>
+      <div class="eyebrow">RECENT JOBS</div><div id="job-list" class="job-list"></div>
+      <details class="logs"><summary>Engine log</summary><pre id="log">No log entries</pre></details>
+      <div class="render-heading"><span class="eyebrow">FINAL RENDER</span><a id="render-download" hidden download>↓ PNG</a></div>
+      <button id="render-button" class="render-preview" disabled><img id="render-image" alt="Scene render" hidden><span id="render-empty">Your render will appear after the job<br><small>Cycles / Eevee</small></span></button>
+      <div class="engine-info"><span>BLENDER ENGINE</span><strong id="engine-label">Connecting…</strong><p>Revisions are saved automatically.<br>Viewing does not interrupt AI work.</p></div>
+    </aside>
+  </main>
+  <div id="notice" role="status" hidden></div>
+  <dialog id="render-dialog"><button id="close-render" aria-label="Close">×</button><img id="large-render" alt="Finished render"></dialog>
+  <script type="module" src="/app.js"></script>
+</body>
+</html>
