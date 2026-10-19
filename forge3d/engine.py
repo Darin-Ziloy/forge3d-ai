@@ -61,7 +61,7 @@ class Engine:
             blender, error = find_blender(), None
         except FileNotFoundError as e:
             blender, error = None, str(e)
-        return {"service": "forge3d", "version": "0.1.0", "blender": blender, "error": error, "allow_python": self.allow_python, "active_job": self.active}
+        return {"service": "forge3d", "version": "0.2.0", "blender": blender, "error": error, "allow_python": self.allow_python, "active_job": self.active}
 
     def project_dir(self, project):
         path = self.data / "projects" / safe_id(project)
@@ -145,6 +145,13 @@ class Engine:
 
     def build(self, project, body):
         request = BuildRequest.model_validate(body)
+        for material in request.scene.materials:
+            for field in ("base_color_texture", "normal_texture", "roughness_texture", "metallic_texture"):
+                texture = getattr(material, field)
+                if texture:
+                    asset = within(self.project_dir(project) / "assets", texture.asset)
+                    if not asset.is_file() or asset.suffix.lower() not in {".png", ".jpg", ".jpeg"}:
+                        raise ValueError(f"Missing or unsupported texture: {texture.asset}")
         for obj in request.scene.objects:
             if obj.type == "import":
                 asset = within(self.project_dir(project) / "assets", obj.asset)
@@ -264,9 +271,12 @@ class Engine:
             raise Conflict("Project changed while job was running")
         destination = project_dir / "revisions" / job["id"]
         destination.mkdir(parents=True)
-        for name in ["scene.blend", "preview.glb", "scene.json", "manifest.json"]:
+        for name in ["scene.blend", "preview.glb", "scene.json", "manifest.json", "scene.fbx", "asset_report.json", "asset_bundle.zip"]:
             if (base / name).exists():
                 shutil.copy2(base / name, destination / name)
+        for directory in ("Textures", "UV"):
+            if (base / directory).is_dir():
+                shutil.copytree(base / directory, destination / directory)
         for file in base.glob("render_*.png"):
             shutil.copy2(file, destination / file.name)
         if not (destination / "scene.blend").exists() or not (destination / "preview.glb").exists():

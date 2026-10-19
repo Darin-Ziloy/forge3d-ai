@@ -36,7 +36,7 @@ In the viewer, use left drag to orbit, right drag to pan, the scroll wheel to zo
 
 Generate configuration with `python -m forge3d mcp-config` using the project's virtual environment. Add the resulting `mcpServers.forge3d` entry to the host's MCP configuration; exact host configuration formats can vary. The generated file contains installation-specific paths and is intentionally excluded from Git.
 
-The official MCP SDK communicates over stdio. The first tool call starts the shared local service if needed. Multiple clients share its queue; `expected_revision` prevents stale edits from overwriting newer work. Cloud-only hosts cannot directly reach your loopback interface and need a local bridge. Remote MCP hosting is not implemented in 0.1.
+The official MCP SDK communicates over stdio. The first tool call starts the shared local service if needed. Multiple clients share its queue; `expected_revision` prevents stale edits from overwriting newer work. Cloud-only hosts cannot directly reach your loopback interface and need a local bridge. Remote MCP hosting is not implemented.
 
 Recommended agent cycle:
 
@@ -99,7 +99,7 @@ Network resource URIs and references escaping the source directory are rejected.
 
 ## Saving, exporting, and reopening
 
-Every successful build automatically saves a project revision. Standard outputs are `.blend`, `.glb`, and optional `.png` frames. Download model files from the viewer. FBX, OBJ, and STL export are not standard commands in this version.
+Every successful build automatically saves a project revision. Standard outputs are `.blend`, `.glb`, and optional `.png` frames. Download model files from the viewer. Set `scene.export_fbx=true` for mesh-only FBX export. OBJ and STL export remain unavailable through the typed API. Textured builds also produce external PNG maps, UV layout SVGs, an asset report, and an asset ZIP; see [Texture workflow](TEXTURES.md).
 
 ```powershell
 .\.venv\Scripts\python.exe -m forge3d save PROJECT_ID

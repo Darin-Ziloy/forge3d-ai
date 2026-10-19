@@ -7,7 +7,7 @@ from .client import Client
 from .schema import SceneSpec, ObjectSpec, Material, RenderOptions
 
 def create_mcp():
-    app = MCPServer("Forge3D", version="0.1.0", instructions="Local 3D workspace. Call capabilities, create/list projects, import assets, then build_scene. Units meters; Z up; Euler rotations in degrees. Mutations return job IDs immediately: poll job_status until succeeded before further edits. Read project for current revision; pass expected_revision to avoid overwrites. Use patch_scene for small batches. View renders to inspect your work. Local Python is opt-in and not sandboxed.")
+    app = MCPServer("Forge3D", version="0.2.0", instructions="Local 3D workspace. Call capabilities, create/list projects, import assets, then build_scene. Units meters; Z up; Euler rotations in degrees. Mutations return job IDs immediately: poll job_status until succeeded before further edits. Read project for current revision; pass expected_revision to avoid overwrites. Use patch_scene for small batches. View renders to inspect your work. Local Python is opt-in and not sandboxed.")
     client = Client()
 
     def call(path, body=None):
@@ -17,7 +17,7 @@ def create_mcp():
     @app.tool()
     def capabilities() -> dict:
         """Inspect engine availability, units, formats and the complete scene JSON schema."""
-        return {"health": call("/api/health"), "scene_schema": SceneSpec.model_json_schema(), "import_formats": ["glb", "gltf", "obj", "stl", "fbx"], "export_formats": ["blend", "glb", "png", "project.zip"], "units": "meters, Z-up, degrees", "viewer": client.url}
+        return {"health": call("/api/health"), "scene_schema": SceneSpec.model_json_schema(), "import_formats": ["glb", "gltf", "obj", "stl", "fbx", "png", "jpg", "jpeg"], "export_formats": ["blend", "glb", "fbx (scene.export_fbx)", "png", "asset_bundle.zip", "project.zip"], "textures": "Import PNG/JPEG; reference asset in material texture slots. Albedo is sRGB; normal/roughness/metallic are Non-Color. Use explicit per-corner UVs for atlas artwork or smart UVs for baking. Scene bakes remove high sources before export. Asset report includes geometry, UV layouts, and texture paths.", "units": "meters, Z-up, degrees", "viewer": client.url}
 
     @app.tool()
     def list_projects() -> list[dict]:
@@ -36,7 +36,7 @@ def create_mcp():
 
     @app.tool()
     def import_asset(project_id: str, source_path: str) -> dict:
-        """Copy a local GLB/glTF/OBJ/STL/FBX into this project. Add an object of type import with the returned asset string to place it in the scene. GLB is the most portable format."""
+        """Copy a local model (GLB/glTF/OBJ/STL/FBX) or texture (PNG/JPEG) into the project. Use model assets in import objects; use image assets in material base_color_texture/normal_texture/roughness_texture/metallic_texture. GLB preserves embedded textures and UVs."""
         return call(f"/api/projects/{project_id}/assets", {"source": source_path})
 
     @app.tool()
@@ -72,6 +72,18 @@ def create_mcp():
         if job["status"] != "succeeded" or name not in job.get("manifest", {}).get("renders", []):
             raise ValueError("Requested render is not available; inspect job_status")
         with client.opener.open(client.url + f"/artifacts/jobs/{job_id}/{name}", timeout=30) as response:
+            data = response.read()
+        return CallToolResult(content=[ImageContent(type="image", data=base64.b64encode(data).decode(), mimeType="image/png")])
+
+    @app.tool()
+    def view_texture(project_id: str, texture_index: int = 0) -> CallToolResult:
+        """Inspect a saved texture as a native MCP image. Indices follow inspect_project.manifest.textures; use the asset report for UV layout URLs and texture metadata."""
+        project = call(f"/api/projects/{project_id}")
+        textures = project.get("manifest", {}).get("textures", [])
+        if not 0 <= texture_index < len(textures):
+            raise ValueError("Texture index unavailable; inspect the project manifest")
+        url = client.url + f"/artifacts/projects/{project_id}/{project['revision']}/{textures[texture_index]}"
+        with client.opener.open(url, timeout=30) as response:
             data = response.read()
         return CallToolResult(content=[ImageContent(type="image", data=base64.b64encode(data).decode(), mimeType="image/png")])
 

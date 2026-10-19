@@ -10,6 +10,9 @@ import traceback
 import bpy
 from mathutils import Vector
 
+sys.path.insert(0, str(Path(__file__).parent))
+from blender_assets import material_textures, apply_uv, bake_assets, collect_asset_outputs, export_fbx, asset_bundle
+
 request = json.loads(Path(sys.argv[sys.argv.index("--") + 1]).read_text(encoding="utf-8"))
 output = Path(request["output"])
 
@@ -67,6 +70,8 @@ def build_scene(spec):
     scene.frame_start = 1
     scene.frame_end = spec["frame_end"]
     scene.unit_settings.system = "METRIC"
+    scene["forge_export_fbx"] = spec.get("export_fbx", False)
+    scene["forge_asset_checks"] = json.dumps(spec.get("asset_checks"))
     scene.world = bpy.data.worlds.new("Forge World")
     scene.world.use_nodes = True
     background = scene.world.node_tree.nodes.get("Background")
@@ -81,6 +86,7 @@ def build_scene(spec):
         for key, value in {"Base Color": item["color"], "Metallic": item["metallic"], "Roughness": item["roughness"], "Emission Color": item["color"], "Emission Strength": item["emission"]}.items():
             shader.inputs[key].default_value = value
         materials[item["id"]] = mat
+        material_textures(mat, item, request["assets"])
     objects = {}
     primitive = {"cube": bpy.ops.mesh.primitive_cube_add, "sphere": bpy.ops.mesh.primitive_uv_sphere_add, "cylinder": bpy.ops.mesh.primitive_cylinder_add, "cone": bpy.ops.mesh.primitive_cone_add, "torus": bpy.ops.mesh.primitive_torus_add, "plane": bpy.ops.mesh.primitive_plane_add}
     for index, item in enumerate(spec["objects"]):
@@ -113,6 +119,7 @@ def build_scene(spec):
         for target in [obj, *imported]:
             if target.type != "MESH":
                 continue
+            apply_uv(target, item.get("uv", {"mode": "preserve"}))
             if item["material"]:
                 target.data.materials.clear()
                 target.data.materials.append(materials[item["material"]])
@@ -172,16 +179,22 @@ def build_scene(spec):
         aim(obj, item["target"])
     scene.frame_set(1)
     bpy.context.view_layer.update()
+    bake_assets(spec.get("bakes", []), objects, progress)
 
 def publish_scene():
     scene = bpy.context.scene
     scene.frame_set(scene.frame_start)
     progress("saving", 0.48)
+    report = collect_asset_outputs(output, json.loads(scene.get("forge_asset_checks", "null")))
+    write_json("asset_report.json", report)
     bpy.ops.file.pack_all()
     bpy.ops.wm.save_as_mainfile(filepath=str(output / "scene.blend"), check_existing=False)
     progress("exporting_preview", 0.55)
     bpy.ops.export_scene.gltf(filepath=str(output / "preview.glb"), export_format="GLB", export_animations=True, export_frame_range=True, export_apply=True, export_cameras=False, export_lights=False, export_extras=True)
+    if scene.get("forge_export_fbx", False):
+        export_fbx(output)
     progress("preview_ready", 0.65, preview=True)
+    return report
 
 def render_frames(options):
     if not options["enabled"]:
@@ -224,12 +237,17 @@ def main():
             bpy.ops.wm.open_mainfile(filepath=request["base_blend"])
         if kind == "python":
             exec(compile(request["code"], "<trusted-ai-script>", "exec"), {"bpy": bpy, "__name__": "__main__", "output_dir": str(output)})
-    if kind != "render":
-        publish_scene()
+    report = publish_scene() if kind != "render" else None
     renders = render_frames(request["render"])
+    if kind != "render":
+        asset_bundle(output, renders)
     scene = bpy.context.scene
     objects = [{"name": o.name, "type": o.type, "vertices": len(o.data.vertices) if o.type == "MESH" else 0} for o in scene.objects]
-    write_json("manifest.json", {"blender_version": bpy.app.version_string, "objects": objects, "object_count": len(objects), "fps": scene.render.fps, "frame_start": scene.frame_start, "frame_end": scene.frame_end, "renders": renders, "preview": "preview.glb" if kind != "render" else None, "blend": "scene.blend" if kind != "render" else None})
+    write_json("manifest.json", {"blender_version": bpy.app.version_string, "objects": objects, "object_count": len(objects), "fps": scene.render.fps, "frame_start": scene.frame_start, "frame_end": scene.frame_end, "renders": renders, "preview": "preview.glb" if kind != "render" else None, "blend": "scene.blend" if kind != "render" else None,
+        "fbx": "scene.fbx" if (output / "scene.fbx").exists() else None,
+        "asset_bundle": "asset_bundle.zip" if report else None, "asset_report": report,
+        "textures": [t["path"] for t in report["textures"]] if report else [],
+        "uv_layouts": [o["uv_layout"] for o in report["objects"] if o["uv_layout"]] if report else []})
     progress("complete", 1, preview=(output / "preview.glb").exists())
 
 try:

@@ -9,6 +9,7 @@ from mcp import Client, StdioServerParameters
 async def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--job")
+    parser.add_argument("--texture-project", help="Inspect the first saved texture through MCP")
     args = parser.parse_args()
     root = Path(__file__).resolve().parent.parent
     params = StdioServerParameters(command=sys.executable, args=["-m", "forge3d", "mcp"], env={"PYTHONPATH":str(root)})
@@ -24,5 +25,11 @@ async def main():
             images = [item for item in result.content if item.type == "image"]
             assert images and base64.b64decode(images[0].data).startswith(b"\x89PNG")
             print("PNG returned as native MCP image content")
+        if args.texture_project:
+            result = await client.call_tool("view_texture", {"project_id": args.texture_project})
+            assert not result.is_error, result
+            images = [item for item in result.content if item.type == "image"]
+            assert images and base64.b64decode(images[0].data).startswith(b"\x89PNG")
+            print("Texture PNG returned as native MCP image content")
 
 asyncio.run(main())

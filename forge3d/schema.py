@@ -10,12 +10,52 @@ Id = Annotated[str, Field(pattern=r"^[a-zA-Z][a-zA-Z0-9_-]{0,63}$")]
 class Model(BaseModel):
     model_config = ConfigDict(extra="forbid", allow_inf_nan=False)
 
+class Texture(Model):
+    asset: str = Field(min_length=1, max_length=200, description="Project PNG/JPEG asset returned by import_asset")
+    uv_map: str = Field(default="UVMap", min_length=1, max_length=63)
+    interpolation: Literal["Linear", "Closest"] = "Linear"
+    extension: Literal["REPEAT", "EXTEND", "CLIP"] = "REPEAT"
+
 class Material(Model):
     id: Id
     color: Color = (0.5, 0.65, 0.8, 1)
     metallic: float = Field(default=0, ge=0, le=1)
     roughness: float = Field(default=0.35, ge=0, le=1)
     emission: float = Field(default=0, ge=0, le=100)
+    base_color_texture: Texture | None = None
+    normal_texture: Texture | None = None
+    roughness_texture: Texture | None = None
+    metallic_texture: Texture | None = None
+    normal_strength: float = Field(default=1, ge=0, le=10)
+
+class UVSpec(Model):
+    mode: Literal["preserve", "smart", "explicit"] = "preserve"
+    name: str = Field(default="UVMap", min_length=1, max_length=63)
+    coordinates: list[list[tuple[Number, Number]]] = Field(default_factory=list, max_length=100000,
+        description="Explicit per-face, per-corner UVs in the same order as mesh faces; origin bottom-left")
+    angle_limit: float = Field(default=66, gt=0, le=89)
+    island_margin: float = Field(default=0.02, gt=0, le=0.2)
+
+    @model_validator(mode="after")
+    def valid_coordinates(self):
+        if self.mode != "explicit" and self.coordinates:
+            raise ValueError("coordinates require explicit UV mode")
+        if self.mode == "explicit" and not self.coordinates:
+            raise ValueError("Explicit UVs require per-face coordinates")
+        return self
+
+class BakeSpec(Model):
+    low: Id
+    high: list[Id] = Field(min_length=1, max_length=32)
+    mode: Literal["albedo", "normal", "both"] = "both"
+    size: Literal[128, 256, 512, 1024, 2048] = 1024
+    margin: int = Field(default=16, ge=1, le=64)
+    cage_extrusion: float = Field(default=0.05, ge=0, le=10)
+    max_ray_distance: float = Field(default=0, ge=0, le=100)
+
+class AssetChecks(Model):
+    target_use: Literal["general", "packaging"] = "general"
+    max_tris: int = Field(default=5000, ge=1, le=10000000)
 
 class Keyframe(Model):
     frame: int = Field(ge=1, le=100000)
@@ -37,6 +77,7 @@ class ObjectSpec(Model):
     scale: Vec3 = (1, 1, 1)
     parent: Id | None = None
     material: Id | None = None
+    uv: UVSpec = Field(default_factory=UVSpec)
     smooth: bool = True
     preview_hidden: bool = False
     asset: str | None = Field(default=None, max_length=200)
@@ -55,6 +96,13 @@ class ObjectSpec(Model):
             for face in self.faces:
                 if len(face) < 3 or len(face) > 1000 or any(i < 0 or i >= len(self.vertices) for i in face):
                     raise ValueError("mesh face has invalid vertex indices or size")
+        if self.uv.mode == "explicit":
+            if self.type != "mesh":
+                raise ValueError("Explicit UVs require a custom mesh with explicit face order")
+            if len(self.uv.coordinates) != len(self.faces) or any(len(uv) != len(face) for uv, face in zip(self.uv.coordinates, self.faces)):
+                raise ValueError("UV coordinates must match every mesh face and corner")
+        if self.type == "empty" and self.uv.mode != "preserve":
+            raise ValueError("Cannot unwrap an empty object")
         frames = [k.frame for k in self.keyframes]
         if len(set(frames)) != len(frames):
             raise ValueError("duplicate keyframe numbers")
@@ -83,6 +131,9 @@ class SceneSpec(Model):
     world_color: tuple[Annotated[float, Field(ge=0, le=1)], Annotated[float, Field(ge=0, le=1)], Annotated[float, Field(ge=0, le=1)]] = (0.08, 0.1, 0.14)
     fps: int = Field(default=24, ge=1, le=120)
     frame_end: int = Field(default=120, ge=1, le=100000)
+    export_fbx: bool = False
+    asset_checks: AssetChecks | None = None
+    bakes: list[BakeSpec] = Field(default_factory=list, max_length=16)
 
     @model_validator(mode="after")
     def references(self):
@@ -92,6 +143,21 @@ class SceneSpec(Model):
         if len(ids) != len(set(ids)) or len(mats) != len(set(mats)) or len(lights) != len(set(lights)):
             raise ValueError("IDs must be unique within each collection")
         parents = {o.id: o.parent for o in self.objects}
+        object_map = {o.id: o for o in self.objects}
+        lows = [b.low for b in self.bakes]
+        highs = {h for b in self.bakes for h in b.high}
+        if len(lows) != len(set(lows)) or set(lows) & highs:
+            raise ValueError("Bake targets must be unique and cannot be sources")
+        for bake in self.bakes:
+            if len(bake.high) != len(set(bake.high)):
+                raise ValueError("Duplicate bake sources")
+            for ref in [bake.low, *bake.high]:
+                if ref not in object_map or object_map[ref].type in {"empty", "import"}:
+                    raise ValueError("Bake references must identify individual declarative meshes")
+            if object_map[bake.low].modifiers:
+                raise ValueError("Bake target must have final topology; put detail modifiers on the high source")
+        if any(o.parent in highs for o in self.objects):
+            raise ValueError("Bake sources are removed after baking and cannot be parents")
         for obj in self.objects:
             if obj.material and obj.material not in mats:
                 raise ValueError(f"Unknown material: {obj.material}")

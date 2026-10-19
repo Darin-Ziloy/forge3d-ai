@@ -45,6 +45,34 @@ let selected = null, projectSignature = '', outlinerSignature = '', lastError = 
 const stageNames = {starting:'Starting Blender', modeling:'Creating objects', saving:'Saving project', exporting_preview:'Exporting 3D preview', preview_ready:'Preview ready', rendering:'Rendering frame', complete:'All files saved', failed:'Engine error'};
 const stateNames = {queued:'Queued', running:'Building scene', succeeded:'Ready to view', failed:'Job failed', cancelled:'Job cancelled', interrupted:'Job interrupted'};
 
+stageNames.baking = 'Baking texture maps';
+let assetSignature = '';
+function showAssetInfo(manifest, base) {
+  if (assetSignature === base) return;
+  assetSignature = base;
+  const report = manifest?.asset_report;
+  $('asset-inspector').hidden = $('asset-outputs').hidden = !report;
+  if (!report) return;
+  $('download-fbx').hidden = !manifest.fbx;
+  $('download-fbx').href = base + (manifest.fbx || '');
+  $('download-bundle').href = base + manifest.asset_bundle;
+  $('download-report').href = base + 'asset_report.json';
+  $('asset-stats').textContent = `${report.triangles} triangles · ${report.material_count} material${report.material_count === 1 ? '' : 's'} · ${report.textures.length} texture${report.textures.length === 1 ? '' : 's'}`;
+  $('asset-warnings').textContent = [...report.warnings, ...(report.textures.length ? [] : ['No image textures in this revision.'])].join(' ');
+  $('texture-list').replaceChildren(...report.textures.map(t => new Option(`${t.name} · ${t.width} × ${t.height}`, base + t.path)));
+  $('uv-list').replaceChildren(...report.objects.filter(o => o.uv_layout).map(o => new Option(`${o.name} · ${o.uv_maps.join(', ')}`, base + o.uv_layout)));
+  for (const kind of ['texture', 'uv']) {
+    const list = $(kind + '-list'), img = $(kind + '-image'), link = $(kind + '-link');
+    list.disabled = !list.options.length;
+    const update = () => {
+      link.hidden = !list.value;
+      if (list.value) { img.src = list.value; link.href = list.value; }
+      else { img.removeAttribute('src'); link.removeAttribute('href'); }
+    };
+    list.onchange = update; update();
+  }
+}
+
 async function api(path) {
   const response = await fetch('/api' + path, {cache:'no-store'});
   if (!response.ok) throw new Error((await response.json()).error || response.statusText);
@@ -168,6 +196,7 @@ $('render-button').onclick = () => $('render-dialog').showModal();
 $('close-render').onclick = () => $('render-dialog').close();
 $('render-dialog').onclick = event => { if(event.target === $('render-dialog')) $('render-dialog').close(); };
 $('projects').onchange = () => {
+  assetSignature = ''; $('asset-inspector').hidden = $('asset-outputs').hidden = true;
   projectId = $('projects').value; project = null; outlinerSignature = ''; resetModel();
   history.replaceState(null, '', '/?project=' + projectId);
   $('revisions').replaceChildren(new Option('Current · live', 'live'));
@@ -179,7 +208,7 @@ $('revisions').onchange = () => { desiredURL = ''; };
 function showProject(data) {
   project = data;
   $('scene-title').textContent = data.scene?.name || data.name;
-  $('scene-subtitle').textContent = `${data.history.length} versions · autosaved`;
+  $('scene-subtitle').textContent = `${data.history.length} version${data.history.length === 1 ? '' : 's'} · autosaved`;
   const revs = $('revisions');
   const signature = data.history.join(',');
   if (revs.dataset.signature !== signature) {
@@ -263,7 +292,10 @@ async function poll() {
             $(id).href = saved + name; $(id).classList.remove('disabled');
           }
           selectedManifest = revision === data.revision ? data.manifest : await (await fetch(saved+'manifest.json')).json();
-          if (projectId === selectedProject) showInventory(selectedManifest, selectedProject + revision);
+          if (projectId === selectedProject) {
+            showInventory(selectedManifest, selectedProject + revision);
+            showAssetInfo(selectedManifest, saved);
+          }
         }
       } else if (model) {
         resetModel();

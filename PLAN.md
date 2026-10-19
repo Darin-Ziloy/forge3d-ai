@@ -60,7 +60,8 @@ Priority: make common tasks available through typed tools instead of arbitrary P
 
 - Boolean, array, remesh, extrusion, inset, and loop cuts with stable selectors; topology, normals, manifold, and dimension checks.
 - Curves, text, and reusable parametric recipes for objects, rooms, and mechanical parts.
-- Image texture slots, UV unwrap, texture baking, PBR presets, and GLB compatibility checks.
+- [x] Image texture slots, explicit per-corner UVs, smart unwrap, high-to-low baking, packed textures, FBX, and game-asset QA (0.2).
+- [ ] Interactive seam editing/painting, advanced PBR graphs, and UV overlap/stretch analysis.
 - Typed Geometry Nodes graphs with socket and version validation.
 - Bulk instancing and object queries that reduce agent context requirements.
 - Multi-view contact sheets, object masks, bounding boxes, and visual feedback for vision models.

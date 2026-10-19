@@ -12,7 +12,7 @@ for name in ["README.md", "PLAN.md", "CONTRIBUTING.md", "LICENSE", "THIRD_PARTY.
     files.add(root / name)
 for name in ["build/three.module.js", "build/three.core.js", "examples/jsm/controls/OrbitControls.js", "examples/jsm/loaders/GLTFLoader.js", "examples/jsm/utils/BufferGeometryUtils.js", "examples/jsm/environments/RoomEnvironment.js", "LICENSE"]:
     files.add(root / "forge3d" / "web" / "vendor" / name)
-destination = root / "output" / "Forge3D-AI-0.1.0-source.zip"
+destination = root / "output" / "Forge3D-AI-0.2.0-source.zip"
 destination.parent.mkdir(exist_ok=True)
 with zipfile.ZipFile(destination,"w",compression=zipfile.ZIP_DEFLATED,compresslevel=9) as archive:
     for file in sorted(files):

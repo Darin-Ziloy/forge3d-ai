@@ -14,3 +14,4 @@ mcp-config.json
 runtime/
 build/
 dist/
+GeneratedAssets/

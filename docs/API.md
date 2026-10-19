@@ -1,4 +1,4 @@
-# JSON API 0.1
+# JSON API 0.2
 
 Base URL: `http://127.0.0.1:8765`. All POST requests require JSON and `Authorization: Bearer <contents of data/token>`. GET requests do not require a token but are restricted by local Host/Origin checks.
 
@@ -54,3 +54,9 @@ j = c.request(f"/api/projects/{p['id']}/build", {
 result = c.wait(j['id'])
 assert result['status'] == 'succeeded', result
 ```
+
+## Textured assets
+
+The existing assets endpoint also imports PNG/JPEG files. The build schema adds material texture slots, per-object `uv`, and scene `bakes`, `asset_checks`, and `export_fbx`. See [TEXTURES.md](TEXTURES.md) for complete examples.
+
+New public revision/job outputs: `asset_report.json`, `asset_bundle.zip`, optional `scene.fbx`, and manifest-listed `Textures/*.png` / `UV/*.svg`. Arbitrary nested files remain private. The manifest embeds the asset report and texture/UV output paths.

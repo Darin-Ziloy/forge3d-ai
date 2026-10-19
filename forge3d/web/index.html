@@ -25,6 +25,7 @@
       <div id="outliner" class="outliner"><div class="muted empty-list">Objects will appear after a build</div></div>
       <div class="inspector"><div class="eyebrow">SELECTED OBJECT</div><strong id="selection">Nothing selected</strong><span id="selection-detail" class="muted">Click a model in the viewport</span></div>
       <div class="exports"><div class="eyebrow">OUTPUT</div><a id="download-glb" class="export-link disabled" download>↓ Model <small>.GLB</small></a><a id="download-blend" class="export-link disabled" download>↓ Blender project <small>.BLEND</small></a></div>
+      <div id="asset-outputs" class="exports" hidden><a id="download-fbx" class="export-link" download hidden>↓ Unity model <small>.FBX</small></a><a id="download-bundle" class="export-link" download>↓ Asset + textures <small>.ZIP</small></a><a id="download-report" class="export-link" target="_blank" rel="noopener">Asset report <small>.JSON</small></a></div>
       <div class="local-note"><span class="dot"></span> Files stored on this computer</div>
     </aside>
     <section class="studio">
@@ -44,6 +45,7 @@
       <details class="logs"><summary>Engine log</summary><pre id="log">No log entries</pre></details>
       <div class="render-heading"><span class="eyebrow">FINAL RENDER</span><a id="render-download" hidden download>↓ PNG</a></div>
       <button id="render-button" class="render-preview" disabled><img id="render-image" alt="Scene render" hidden><span id="render-empty">Your render will appear after the job<br><small>Cycles / Eevee</small></span></button>
+      <section class="asset-inspector" id="asset-inspector" hidden><div class="eyebrow">TEXTURES &amp; UV</div><p id="asset-stats" class="muted"></p><label class="field-label" for="texture-list">Texture image</label><select id="texture-list"></select><a id="texture-link" target="_blank" rel="noopener"><img id="texture-image" alt="Selected texture atlas"></a><label class="field-label" for="uv-list">UV layout</label><select id="uv-list"></select><a id="uv-link" target="_blank" rel="noopener"><img id="uv-image" alt="Selected UV layout"></a><p class="muted" id="asset-warnings"></p></section>
       <div class="engine-info"><span>BLENDER ENGINE</span><strong id="engine-label">Connecting…</strong><p>Revisions are saved automatically.<br>Viewing does not interrupt AI work.</p></div>
     </aside>
   </main>

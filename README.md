@@ -8,12 +8,13 @@ Build models, import assets, animate scenes, render images, and save versioned p
 
 ## Features
 
-- **AI control:** 16 MCP tools, validated JSON schemas, HTTP API, and CLI.
+- **AI control:** 17 MCP tools, validated JSON schemas, HTTP API, and CLI.
 - **Modeling:** primitives, custom meshes, object hierarchies, and common modifiers.
+- **Textures and UV:** PNG/JPEG assets, albedo/normal/roughness/metallic maps, explicit atlas UVs, smart unwrap, and high-to-low baking.
 - **Look development:** PBR materials, camera, lighting, and Cycles/Eevee rendering.
 - **Animation:** transform keyframes, GLB animation playback, and PNG frame sequences.
 - **Import:** GLB/glTF, OBJ with MTL, STL, and FBX, with supported dependencies copied into the project.
-- **Export:** GLB models, native `.blend` files, PNG renders, and project ZIP archives.
+- **Export:** GLB, optional mesh-only FBX, packed `.blend`, external PNG textures, UV layouts, asset bundles, and project ZIP archives.
 - **Persistence:** autosave, revision history, restore, and portable project reopening.
 - **Viewer:** orbit, pan, zoom, wireframe, timeline, job progress, logs, and render preview.
 
@@ -64,14 +65,15 @@ Import returns an asset reference. Place it in a scene with an object of type `i
 
 ## Status and scope
 
-**Version 0.1.0 is a working prototype**, using Blender as its 3D engine. It is not a complete replacement for Blender's authoring tools. Typed operations cover the basic pipeline; advanced `bpy` scripting is an explicit opt-in for trusted agents.
+**Version 0.2.0 is a working prototype**, using Blender as its 3D engine. It is not a complete replacement for Blender's authoring tools. Typed operations cover the basic pipeline; advanced `bpy` scripting is an explicit opt-in for trusted agents.
 
 Tested on **Windows 10, Python 3.14.4, and Blender 5.2.2 LTS**. Windows 11 is a target platform and has not yet been separately verified. [Validation report](docs/VALIDATION.md).
 
-Current limits include one worker at a time, CPU rendering by default, no standard FBX/OBJ/STL export commands, no import button in the viewer, and no remote MCP endpoint. Rigging, UV tools, simulations, and GPU selection are on the [roadmap](PLAN.md).
+Current limits include one worker at a time, CPU rendering by default, no standard OBJ/STL export commands, no import button in the viewer, and no remote MCP endpoint. Rigging, interactive texture painting, simulations, and GPU selection are on the [roadmap](PLAN.md).
 
 ## Documentation
 
+- [Textures, UV, baking, and casual-lowpoly-props](docs/TEXTURES.md).
 - [User guide](docs/GUIDE.md): installation, MCP workflow, imports, persistence, and advanced mode.
 - [API reference](docs/API.md): endpoints, authentication, job states, and examples.
 - [Architecture and roadmap](PLAN.md).

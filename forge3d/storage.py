@@ -41,8 +41,8 @@ def import_asset(project_dir: Path, source: str):
     """Copy explicitly selected local model and supported dependencies into project."""
     source = Path(source).resolve()
     ext = source.suffix.lower()
-    if ext not in {".glb", ".gltf", ".obj", ".stl", ".fbx"}:
-        raise ValueError("Supported imports: GLB, glTF, OBJ, STL, FBX")
+    if ext not in {".glb", ".gltf", ".obj", ".stl", ".fbx", ".png", ".jpg", ".jpeg"}:
+        raise ValueError("Supported imports: GLB, glTF, OBJ, STL, FBX, PNG, JPEG")
     if not source.is_file():
         raise FileNotFoundError(source)
     files = {source}

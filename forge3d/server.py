@@ -26,7 +26,7 @@ def make_server(data, port=8765, allow_python=False, timeout=600):
     return server
 
 class Handler(BaseHTTPRequestHandler):
-    server_version = "Forge3D/0.1"
+    server_version = "Forge3D/0.2"
 
     def setup(self):
         super().setup()
@@ -69,7 +69,8 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(file.stat().st_size))
         self.send_header("Cache-Control", "no-cache")
         self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; worker-src 'self' blob:; frame-ancestors 'none'")
+        # GLTFLoader's ImageBitmapLoader fetches embedded GLB images via local blob URLs.
+        self.send_header("Content-Security-Policy", "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self' blob:; worker-src 'self' blob:; frame-ancestors 'none'")
         self.end_headers()
         with file.open("rb") as stream:
             while chunk := stream.read(1024 * 1024):
@@ -109,13 +110,15 @@ class Handler(BaseHTTPRequestHandler):
                 return self._json(engine.job(parts[2]))
             if parts[0] == "artifacts":
                 # Whitelist public outputs; never expose request.json, code, tokens, or arbitrary files.
-                if len(parts) == 4 and parts[1] == "jobs":
+                if len(parts) >= 4 and parts[1] == "jobs":
                     base = engine.job_dir(parts[2])
-                elif len(parts) == 5 and parts[1] == "projects":
+                    name = "/".join(parts[3:])
+                elif len(parts) >= 5 and parts[1] == "projects":
                     project = engine.project(parts[2])
                     if parts[3] not in project["history"]:
                         raise FileNotFoundError("Unknown revision")
                     base = engine.project_dir(parts[2]) / "revisions" / safe_id(parts[3])
+                    name = "/".join(parts[4:])
                 elif len(parts) == 3 and parts[1] == "exports":
                     filename = parts[2]
                     if not filename.endswith(".zip"):
@@ -124,9 +127,13 @@ class Handler(BaseHTTPRequestHandler):
                     return self._file(engine.data / "exports" / filename)
                 else:
                     raise FileNotFoundError(path)
-                name = parts[-1]
                 import re
-                if name not in {"scene.blend", "preview.glb", "manifest.json", "scene.json"} and not re.fullmatch(r"render_\d{5,6}\.png", name):
+                if re.fullmatch(r"(?:Textures/[a-zA-Z0-9_-]+\.png|UV/\d{4}\.svg)", name):
+                    manifest = json.loads((base / "manifest.json").read_text(encoding="utf-8"))
+                    if name not in manifest.get("textures", []) + manifest.get("uv_layouts", []):
+                        raise FileNotFoundError("Not a declared output")
+                    return self._file(within(base, name))
+                if name not in {"scene.blend", "preview.glb", "manifest.json", "scene.json", "scene.fbx", "asset_report.json", "asset_bundle.zip"} and not re.fullmatch(r"render_\d{5,6}\.png", name):
                     raise FileNotFoundError("Not a public artifact")
                 return self._file(base / name)
             web = Path(__file__).with_name("web")
